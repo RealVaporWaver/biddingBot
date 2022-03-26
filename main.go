@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -30,6 +32,14 @@ func removeDuplicateStr(strSlice []string) []string {
 	return list
 }
 
+type Config struct {
+	Address        string  `json:"address"`
+	BidAmount      float32 `json:"bidAmount"`
+	ExpirationTime int32   `json:"expirationTime"`
+	AccountAddress string  `json:"accountAddress"`
+	PrivateKey     string  `json:"privateKey"`
+}
+
 func main() {
 	fmt.Println("Enter collection you want to bid on: ")
 	var slug string
@@ -40,8 +50,6 @@ func main() {
 	doc, _ := goquery.NewDocumentFromReader(resp.Body)
 
 	var a []string
-
-	println(doc)
 
 	doc.Find("body a").Each(func(index int, item *goquery.Selection) {
 		wed, _ := item.Attr("href")
@@ -55,9 +63,23 @@ func main() {
 	//fmt.Printf("%v", a)
 	println(contractAddress)
 
-	fi, _ := os.Create("addresses.txt")
+	fi, _ := os.ReadFile("config.json")
 
-	fi.WriteString(contractAddress)
+	jsonBlob := []byte(fi)
+
+	config := Config{}
+
+	err := json.Unmarshal(jsonBlob, &config)
+
+	if err != nil {
+		println("successfully loaded data")
+	}
+
+	config.Address = contractAddress
+
+	configJson, _ := json.Marshal(config)
+
+	ioutil.WriteFile("config.json", configJson, 0644)
 
 	/*hash, no := http.Get("https://ja3er.com/json")
 
